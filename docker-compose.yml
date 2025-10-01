@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_USER: appuser
+      POSTGRES_DB: debug_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    command: node src/index.js
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgres://appuser:example@postgres:5432/debug_db
+      JWT_SECRET: supersecretjwtkey
+    ports:
+      - '4000:4000'
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/usr/src/app
+
+  frontend:
+    build: ./frontend
+    command: pnpm dev --host
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./frontend:/usr/src/app
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
